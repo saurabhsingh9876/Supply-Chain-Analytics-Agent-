@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: supply-chain-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      # Mount the entire backend so Python file changes hot-reload without rebuilding
+      - ./backend:/app
+      # Override with a named volume for venv/cache (don't sync local venv into container)
+      - /app/__pycache__
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

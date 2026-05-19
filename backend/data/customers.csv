@@ -1,0 +1,21 @@
+customer_id,customer_name,tier,channel,region,account_manager
+C001,Coastal Cafe Group,T0,wholesale,West,Sarah Chen
+C002,Northeast Roasters Alliance,T1,wholesale,Northeast,James Miller
+C003,Southern Grounds Distributors,T1,wholesale,Southeast,Maria Rodriguez
+C004,Pacific Coast Coffee Supply,T2,wholesale,West,Sarah Chen
+C005,Heartland Bean Co.,T2,wholesale,Midwest,David Kim
+C006,Metro Cafe Partners,T3,wholesale,Northeast,James Miller
+C007,Sunrise Coffee Distributors,T3,wholesale,Southeast,Maria Rodriguez
+C008,Golden Gate Wholesale,T3,wholesale,West,Sarah Chen
+C009,Lakeside Provisions,T4,wholesale,Midwest,David Kim
+C010,Harbor Coffee Collective,T4,wholesale,Northeast,James Miller
+C011,Summit DTC Shopify,MSRP,shopify,National,Emily Park
+C012,Bean Direct Online,MSRP,shopify,National,Emily Park
+C013,Coffee Lovers Club,MSRP,shopify,National,Emily Park
+C014,Amazon Marketplace,MSRP,amazon,National,Tom Wilson
+C015,Amazon Fresh Channel,MSRP,amazon,National,Tom Wilson
+C016,West End Coffee Bar,T4,retail_store,West,Sarah Chen
+C017,Brooklyn Brew Shop,T4,retail_store,Northeast,James Miller
+C018,Peach State Coffee Co.,T2,wholesale,Southeast,Maria Rodriguez
+C019,Summit Premium Wholesale,T0,wholesale,West,Sarah Chen
+C020,Great Lakes Coffee Corp,T1,wholesale,Midwest,David Kim

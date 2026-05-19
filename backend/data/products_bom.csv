@@ -1,0 +1,26 @@
+sku_id,sku_name,category,weight_oz,coffee_cost,packaging_cost,labor_cost,total_cogs,msrp
+SKU001,Colombian Supremo 12oz,whole_bean,12,3.97,0.85,0.65,5.47,22.0
+SKU002,Brazilian Santos 12oz,whole_bean,12,3.22,0.85,0.65,4.72,20.0
+SKU003,Ethiopian Yirgacheffe 12oz,whole_bean,12,3.55,0.85,0.65,5.05,21.0
+SKU004,Guatemalan Antigua 12oz,whole_bean,12,3.4,0.85,0.65,4.9,20.5
+SKU005,Sumatra Mandheling 12oz,whole_bean,12,4.15,0.85,0.65,5.65,23.0
+SKU006,House Blend 12oz,whole_bean,12,2.88,0.85,0.65,4.38,19.0
+SKU007,Costa Rican Tarrazu 12oz,whole_bean,12,3.65,0.85,0.65,5.15,21.5
+SKU008,Summit Reserve Blend 5lb,whole_bean,80,18.5,2.1,1.8,22.4,72.0
+SKU009,Espresso Roast 5lb,whole_bean,80,15.2,2.1,1.8,19.1,65.0
+SKU010,Breakfast Blend 12oz,whole_bean,12,2.45,0.85,0.65,3.95,17.0
+SKU011,French Roast 12oz,ground,12,3.1,0.85,0.65,4.6,19.0
+SKU012,Decaf Colombian 12oz,ground,12,3.3,0.85,0.65,4.8,20.0
+SKU013,House Blend Ground 12oz,ground,12,2.95,0.92,0.7,4.57,18.5
+SKU014,Breakfast Blend Ground 12oz,ground,12,2.6,0.92,0.7,4.22,17.5
+SKU015,French Roast Ground 10oz,ground,10,2.75,1.05,0.7,4.5,18.0
+SKU016,Colombian Ground 10oz,ground,10,2.8,1.05,0.7,4.55,18.0
+SKU017,House Blend Pods 12ct,pods,6,3.2,1.85,0.45,5.5,15.0
+SKU018,Breakfast Blend Pods 12ct,pods,6,2.1,1.85,0.45,4.4,13.0
+SKU019,French Roast Pods 12ct,pods,6,2.65,1.85,0.45,4.95,14.0
+SKU020,Cold Brew Concentrate 32oz,cold_brew,32,4.5,1.4,1.2,7.1,16.0
+SKU021,Cold Brew Latte 4-Pack,cold_brew,32,8.2,2.15,1.8,12.15,28.0
+SKU022,Cold Brew Variety 12-Pack,cold_brew,96,14.8,5.6,3.2,23.6,48.0
+SKU023,Single Serve Pour Over,pods,1,0.72,0.4,0.2,1.32,5.0
+SKU024,Nitro Cold Brew 4-Pack,cold_brew,28,3.8,1.6,0.9,6.3,24.0
+SKU025,Summit Reserve Cold Brew 6-Pack,cold_brew,48,10.5,4.2,2.1,16.8,62.0

@@ -1,0 +1,17 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
