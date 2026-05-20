@@ -14,12 +14,17 @@ Adding a new question requires ZERO new Python code.
 """
 import json
 import os
+import sys
 import time
 import logging
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 import anthropic
 from tools.generic_tool import run_pandas_code, DATA_SCHEMA
+from rbac import pre_tool_use_hook, get_role
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,8 +32,15 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Anthropic Claude client (Claude Agent SDK)
 # ---------------------------------------------------------------------------
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+
+# Log at startup so we can see what model is loaded
+print(f"[agent.py] Loaded. CLAUDE_MODEL={_MODEL}", file=sys.stderr, flush=True)
+logger.info(f"Agent initialized with model: {_MODEL}")
+
+client = anthropic.Anthropic(api_key=_API_KEY)
+MODEL = _MODEL
 
 # ---------------------------------------------------------------------------
 # Claude tool definition — ONE tool for everything
@@ -98,16 +110,52 @@ CRITICAL coding rules (Python 3.11):
 """
 
 
-def plan_and_execute(question: str) -> Dict[str, Any]:
+def _build_session_context_block(session_context: List[Dict]) -> str:
+    """Build a feedback block from rated Q&A pairs to inject into Claude's narrative prompt."""
+    if not session_context:
+        return ""
+    lines = ["\n\n---\n## Session Memory (User Feedback)\n"]
+    excellent = [e for e in session_context if e.get("rating") == "excellent"]
+    moderate  = [e for e in session_context if e.get("rating") == "moderate"]
+    worst     = [e for e in session_context if e.get("rating") == "worst"]
+    if excellent:
+        lines.append("### Excellent answers — match this style:")
+        for e in excellent[-2:]:
+            lines.append(f'- Q: "{e["question"]}"\n  Finding: "{e["summary"]}"')
+    if moderate:
+        lines.append("\n### Moderate answers — good but can improve:")
+        for e in moderate[-2:]:
+            lines.append(f'- Q: "{e["question"]}"\n  Finding: "{e["summary"]}"')
+    if worst:
+        lines.append("\n### Worst answers — avoid this style:")
+        for e in worst[-1:]:
+            lines.append(f'- Q: "{e["question"]}"')
+    lines.append("\nAdjust your narrative depth and format to match the excellent examples above.\n---")
+    return "\n".join(lines)
+
+
+def plan_and_execute(question: str, role: str = "executive", session_context: Optional[List[Dict]] = None) -> Dict[str, Any]:
     """
     Main agent loop (powered by Claude Agent SDK):
     1. Claude generates pandas code via tool_use
-    2. Code is executed against pre-loaded dataframes
-    3. Claude generates narrative analysis from the results
+    2. PreToolUse hook checks role permissions before execution
+    3. Code is executed against pre-loaded dataframes (if allowed)
+    4. Claude generates narrative analysis from the results (with session context)
     """
+    session_context = session_context or []
     start = time.time()
     tokens_used = 0
     trace: List[str] = []
+
+    # Read model at request time so .env changes are picked up without restart
+    model = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+
+    # Log the model being used for this request
+    print(f"[plan_and_execute] Using model={model}", file=sys.stderr, flush=True)
+    logger.info(f"plan_and_execute called with model={model}")
+
+    _client = anthropic.Anthropic(api_key=api_key)
 
     # ------------------------------------------------------------------
     # Step 1: Claude generates pandas code via tool_use
@@ -117,8 +165,8 @@ def plan_and_execute(question: str) -> Dict[str, Any]:
 
     try:
         trace.append("Planning: asking Claude to generate analytics code...")
-        resp = client.messages.create(
-            model=MODEL,
+        resp = _client.messages.create(
+            model=model,
             max_tokens=2048,
             system=SYSTEM_PROMPT,
             messages=[
@@ -156,7 +204,34 @@ def plan_and_execute(question: str) -> Dict[str, Any]:
         }
 
     # ------------------------------------------------------------------
-    # Step 2: Execute the generated code
+    # Step 2: PreToolUse hook — check role permissions before execution
+    # ------------------------------------------------------------------
+    role_info = get_role(role)
+    trace.append(f"PreToolUse hook: checking permissions for role='{role_info['label']}'...")
+    allowed, hook_message = pre_tool_use_hook(role, generated_code)
+
+    if not allowed:
+        trace.append(f"PreToolUse hook DENIED: {hook_message}")
+        logger.warning(f"RBAC deny for role={role}: {hook_message}")
+        return {
+            "tool_name": tool_name,
+            "table": [],
+            "summary": hook_message,
+            "narrative": (
+                f"**Access Denied**\n\n{hook_message}\n\n"
+                f"Your current role **{role_info['label']}** only has access to: "
+                f"{', '.join(role_info['allowed_files'])}."
+            ),
+            "trace": trace,
+            "tokens_used": tokens_used,
+            "latency_ms": int((time.time() - start) * 1000),
+            "error": "rbac_denied",
+        }
+
+    trace.append(f"PreToolUse hook ALLOWED: {hook_message}")
+
+    # ------------------------------------------------------------------
+    # Step 3: Execute the generated code
     # ------------------------------------------------------------------
     trace.append("Executing generated pandas code...")
     result = run_pandas_code(generated_code)
@@ -195,8 +270,8 @@ def plan_and_execute(question: str) -> Dict[str, Any]:
                 },
             ]
 
-            retry_resp = client.messages.create(
-                model=MODEL,
+            retry_resp = _client.messages.create(
+                model=model,
                 max_tokens=2048,
                 system=SYSTEM_PROMPT,
                 messages=retry_messages,
@@ -233,11 +308,16 @@ def plan_and_execute(question: str) -> Dict[str, Any]:
         }
 
     # ------------------------------------------------------------------
-    # Step 3: Generate narrative analysis via Claude
+    # Step 4: Generate narrative analysis via Claude (with session context)
     # ------------------------------------------------------------------
     try:
         trace.append("Generating narrative analysis via Claude...")
         table_preview = json.dumps(table[:20], indent=2, default=str)
+
+        # Inject session feedback so Claude adapts its style
+        session_block = _build_session_context_block(session_context)
+        if session_block:
+            trace.append(f"Session context: {len(session_context)} rated answer(s) injected into prompt")
 
         narrative_prompt = f"""You are a senior supply chain analyst at Summit Coffee Co.
 
@@ -247,7 +327,7 @@ Key finding: {data_summary}
 
 Data table (first 20 rows):
 {table_preview}
-
+{session_block}
 Write a concise, insightful narrative analysis (3-5 paragraphs) that:
 1. Directly answers the question with specific numbers from the data
 2. Highlights the most important findings and anomalies
@@ -256,8 +336,8 @@ Write a concise, insightful narrative analysis (3-5 paragraphs) that:
 
 Be specific and data-driven."""
 
-        narr_resp = client.messages.create(
-            model=MODEL,
+        narr_resp = _client.messages.create(
+            model=model,
             max_tokens=800,
             system="You are a senior supply chain analyst. Be concise, specific, and actionable.",
             messages=[

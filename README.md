@@ -8,31 +8,40 @@ An AI-powered "digital worker" that answers natural language supply chain and pr
 
 ## Quick Start
 
-### 1. Clone / unzip the project
+### Option A — Run on your local machine
+
+> **Requires Python 3.11+** and Node 18+.  
+> If you have a different Python version installed (e.g. 3.9 or 3.12) and run into dependency conflicts, use **Option B (Docker)** instead — it guarantees the exact right Python version.
+
+#### 1. Clone the project
 
 ```bash
+git clone https://github.com/saurabhsingh9876/Supply-Chain-Analytics-Agent-.git
 cd supply-chain-agent
 ```
 
-### 2. Backend Setup
+#### 2. Backend
 
 ```bash
 cd backend
+
+# Create and activate a virtual environment
 python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # macOS/Linux
+venv\Scripts\activate          # Windows PowerShell
+# source venv/bin/activate     # macOS / Linux
+
 pip install -r requirements.txt
 ```
 
-Create a `.env` file (or edit the existing one):
+Create `backend/.env`:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...your-anthropic-key-here...
+ANTHROPIC_API_KEY=sk-ant-...your-key-here...
 CLAUDE_MODEL=claude-3-5-sonnet-20241022
 DATA_DIR=./data
 ```
 
-> Get your Anthropic API key at: https://console.anthropic.com/
+> Get your key at: https://console.anthropic.com/
 
 Start the backend:
 
@@ -40,9 +49,9 @@ Start the backend:
 uvicorn main:app --reload --port 8000
 ```
 
-API docs available at: http://localhost:8000/docs
+API docs: http://localhost:8000/docs
 
-### 3. Frontend Setup
+#### 3. Frontend
 
 ```bash
 cd frontend
@@ -50,7 +59,64 @@ npm install
 npm start
 ```
 
-Frontend runs at: http://localhost:3000
+Frontend: http://localhost:3000
+
+---
+
+### Option B — Run with Docker (recommended if you have Python version issues)
+
+> **Why Docker?**  
+> This project requires **Python 3.11** for full compatibility with `anthropic`, `pandas`, and `pydantic` v2.  
+> If your machine has a different Python version (e.g. 3.9, 3.10, or 3.12) you may hit dependency errors like:  
+> `ERROR: Could not find a version that satisfies the requirement anthropic>=0.25.0`  
+> or pydantic v1/v2 conflicts.  
+> Docker solves this by running the backend in an isolated **Python 3.11-slim** container — no version conflicts, no venv headaches.
+
+#### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+
+#### 1. Set your API key
+
+```bash
+# Copy the example and fill in your key
+cp backend/.env.example backend/.env   # macOS/Linux
+copy backend\.env.example backend\.env  # Windows
+```
+
+Edit `backend/.env`:
+
+```env
+ANTHROPIC_API_KEY=sk-ant-...your-key-here...
+CLAUDE_MODEL=claude-3-5-sonnet-20241022
+DATA_DIR=./data
+```
+
+#### 2. Build and start everything
+
+```bash
+# From the project root (where docker-compose.yml lives)
+docker compose up --build
+```
+
+This starts:
+| Service | URL |
+|---|---|
+| Backend (FastAPI) | http://localhost:8000 |
+| Frontend (React) | http://localhost:3000 |
+
+#### 3. Stop containers
+
+```bash
+docker compose down
+```
+
+#### Run backend container only (without docker-compose)
+
+```bash
+cd backend
+docker build -t supply-chain-backend .
+docker run -p 8000:8000 --env-file .env supply-chain-backend
+```
 
 ---
 
@@ -63,19 +129,35 @@ supply-chain-agent/
 │   ├── agent.py             # Core agent: plan → execute → narrate (Claude SDK)
 │   ├── tool_registry.py     # Registry of analytics tools
 │   ├── data_loader.py       # CSV loading with caching
+│   ├── rbac.py              # Role-Based Access Control (executive/analyst/viewer)
 │   ├── tools/
 │   │   └── generic_tool.py  # Generic pandas code executor
-│   └── data/                # 6 CSV data files
+│   ├── data/                # 6 CSV data files
+│   └── Dockerfile           # Python 3.11 container (see Docker section below)
 ├── frontend/
 │   ├── src/
 │   │   ├── App.jsx          # Main app shell
-│   │   ├── components/
-│   │   │   ├── ChatInterface.jsx   # Question input + history
-│   │   │   ├── ResultPanel.jsx     # Narrative + table display
-│   │   │   ├── DataTable.jsx       # Sortable results table
-│   │   │   └── SampleQuestions.jsx # 20 pre-built questions
-│   │   └── api.js           # Axios API client
+│   │   ├── App.css          # Layout, header, input card, responsive breakpoints
+│   │   ├── animations.css   # Shared keyframe animations
+│   │   ├── api.js           # Axios API client
+│   │   └── components/      # Each component lives in its own subfolder
+│   │       ├── AgentLoader/
+│   │       │   ├── AgentLoader.jsx   # Animated 3-stage thinking indicator
+│   │       │   └── AgentLoader.css
+│   │       ├── HeaderTicker/
+│   │       │   ├── HeaderTicker.jsx  # Sliding message ticker in header
+│   │       │   └── HeaderTicker.css
+│   │       ├── ResultPanel/
+│   │       │   ├── ResultPanel.jsx   # Narrative + trace + rating tabs
+│   │       │   └── ResultPanel.css
+│   │       ├── SampleQuestions/
+│   │       │   ├── SampleQuestions.jsx  # 20 pre-built questions sidebar
+│   │       │   └── SampleQuestions.css
+│   │       └── DataTable/
+│   │           ├── DataTable.jsx     # Sortable, paginated results table
+│   │           └── DataTable.css
 │   └── package.json
+├── docker-compose.yml       # Runs backend + frontend together
 └── README.md
 ```
 
@@ -242,11 +324,13 @@ Data is loaded once and cached in memory via `functools.lru_cache`.
 
 | Layer | Technology | Why |
 |---|---|---|
-| **LLM** | **Anthropic Claude 3.5 Sonnet** | **State-of-the-art reasoning, native tool_use, Claude Agent SDK** |
-| Backend | FastAPI + Python | Fast, async, auto-docs, type-safe |
+| **LLM** | **Anthropic Claude 3.5 Sonnet** | State-of-the-art reasoning, native `tool_use`, Claude Agent SDK |
+| Backend | FastAPI + Python 3.11 | Fast, async, auto-docs, type-safe |
 | Data | Pandas | Flexible joins/aggregations on CSV data |
-| Frontend | React + Axios | Component-based, fast iteration |
-| Styling | Tailwind CSS | Utility-first, consistent design |
+| Frontend | React 18 + Axios | Component-based, fast iteration |
+| Styling | Plain CSS (co-located per component) | No build-time dependency, zero runtime overhead, easy to maintain |
+| Containerisation | Docker + docker-compose | Solves Python version conflicts; guarantees Python 3.11-slim environment |
+| RBAC | `rbac.py` (executive / analyst / viewer) | Role-gated data access without a full auth server |
 
 ---
 

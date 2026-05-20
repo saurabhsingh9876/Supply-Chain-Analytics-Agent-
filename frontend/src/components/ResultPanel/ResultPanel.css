@@ -1,0 +1,187 @@
+/* ============================================================
+   ResultPanel.css
+   ============================================================ */
+
+.rp-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  overflow: hidden;
+  animation: fadeIn 0.35s ease both;
+}
+
+/* ---- Tab bar ---- */
+.rp-tabs {
+  display: flex;
+  border-bottom: 1px solid #334155;
+  background: #0f172a;
+  align-items: center;
+}
+
+.rp-tab {
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #475569;
+  border-bottom: 2px solid transparent;
+  letter-spacing: 0.01em;
+  transition: color 0.2s, border-color 0.2s;
+}
+.rp-tab:hover      { color: #94a3b8; }
+.rp-tab--active    { color: #60a5fa; border-bottom: 2px solid #3b82f6; background: rgba(59,130,246,0.05); }
+
+.rp-tabs-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+}
+
+/* ---- Rating bar (top-right, always visible) ---- */
+.rp-rating-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: ratingSlideIn 0.3s ease both;
+}
+
+.rp-rating-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.rp-rating-select {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 5px;
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.rp-rating-select:focus { border-color: #3b82f6; }
+
+.rp-rating-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.rp-rating-btn:hover          { background: #1d4ed8; transform: translateY(-1px); }
+.rp-rating-btn:disabled       { background: #1e293b; color: #475569; cursor: not-allowed; }
+
+.rp-rating-saved {
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: ratingSlideIn 0.3s ease both;
+}
+
+.rp-export-btn {
+  background: #1e293b;
+  color: #60a5fa;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.rp-export-btn:hover { background: #0f172a; }
+
+/* ---- Body ---- */
+.rp-body { padding: 20px; }
+
+.rp-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 10px;
+}
+
+.rp-question-block {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  background: #0f172a;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+  line-height: 1.6;
+}
+
+.rp-narrative {
+  line-height: 1.75;
+  font-size: 14px;
+  color: #cbd5e1;
+  animation: fadeIn 0.4s ease both;
+}
+
+/* ---- Trace ---- */
+.rp-trace-box {
+  background: #0f172a;
+  border-radius: 8px;
+  padding: 14px;
+  font-family: "Fira Code", "Cascadia Code", monospace;
+  font-size: 12px;
+  color: #64748b;
+  border: 1px solid #334155;
+}
+
+.rp-trace-line {
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  animation: fadeIn 0.2s ease both;
+}
+
+.rp-trace-index {
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  min-width: 22px;
+  text-align: center;
+}
+
+.rp-meta-row {
+  margin-top: 16px;
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #475569;
+  padding-top: 14px;
+  border-top: 1px solid #334155;
+}
+
+/* ---- Empty table ---- */
+.rp-empty-table {
+  color: #475569;
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 13px;
+}
